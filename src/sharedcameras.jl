@@ -578,7 +578,7 @@ start(shcam::SharedCamera,remcam::RemoteCamera ) = begin
     pid =[0]
     try
     # start working
-    pid[1] = working(camera,remcam)
+    pid[1] = working(1)
     @info "worker pid = $(pid[1])"
 
     catch ex
@@ -602,9 +602,9 @@ end
 function update(shcam::SharedCamera,remcam::RemoteCamera)
   stop(shcam,remcam)
   _read_and_update_config(shcam)
-  configure(device(shcam,1),shcam.img_config)
+  config(shcam,remcam)
   @info "Camera configuration has been updated"
-  working(device(shcam,1), remcam)
+  working(1)
   nothing
 end
 

@@ -440,8 +440,8 @@ function working(camNum::Int64)
       try
          remote_do(SpinnakerCameras.work,w[1],camNum)
 
-      catch e
-        @info e
+     catch e
+         @info e
       end
      return w[1]
  end

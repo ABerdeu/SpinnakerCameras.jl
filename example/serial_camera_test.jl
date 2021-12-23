@@ -3,8 +3,8 @@ using Distributed
 addprocs(1)
 
 @everywhere using Pkg
-@everywhere Pkg.activate("/home/evwaco/SC.jl/")
-@everywhere import  SpinnakerCameras as SC
+@everywhere Pkg.activate("/home/evwaco/SpinnakerCameras.jl/")
+@everywhere import SpinnakerCameras as SC
 
 
 system = SC.System()

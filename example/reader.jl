@@ -1,5 +1,4 @@
 using SpinnakerCameras
-using Images
 using Statistics
 using Dates
 if pwd() != "/home/evwaco/SpinnakerCameras.jl/example"
@@ -40,13 +39,6 @@ local_ts = Vector{DateTime}(undef,saveNum)
     # print("Image $(k) is saved ...")
 end
 
-# numericArr = map(saveImg[:,:,k] for k =1:saveNum) do _img
-#     convert(Array{Float16},_img)
-# end
-#
-# coloredImage = map(numericArr[k] for k in 1:saveNum)do arr
-#     colorview(Gray,arr)
-# end
 timestamp = Vector{DateTime}(undef,15)
 change_ind = Vector{Int64}(undef,20)
 counter = [1]

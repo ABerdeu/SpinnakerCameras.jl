@@ -307,7 +307,7 @@ mutable struct RemoteCamera{T<:Number} <: AbstractCamera{T}
             fill!(imgTime,0)
         end
 
-        return new{T}(arrays, shmids, timestamps, device,HighResolutionTime(0,0),cmds,img,imgTime,Condition(),0)
+        return new{T}(arrays, timestamps, shmids, device,HighResolutionTime(0,0),cmds,img,imgTime,Condition(),0)
     end
 end
 
