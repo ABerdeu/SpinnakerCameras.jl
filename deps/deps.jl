@@ -17,9 +17,6 @@
 # Path to the core TAO dynamic library:
 const taolib = "/home/evwaco/TAO/base/.libs/libtao.so"
 
-# Path to SpinnakerCameras library 
-const lib = "/opt/spinnaker/lib/libSpinnaker_C.so"
-
 # Possible return values for an operation:
 struct Status
     val::Cint
