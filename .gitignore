@@ -9,5 +9,5 @@
 Manifest.toml
 
 #deps
-
+gendeps
 build.log

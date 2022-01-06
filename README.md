@@ -159,3 +159,74 @@ img.timestamp        # yields the timestamp of `img`
 img.validpayloadsize # yields the valid payload size of `img`
 img.width            # yields the width of `img`
 ```
+## Camera server
+`Taobindings.jl` provides tools to create camera server and implement  shared memory space . To allow for multiprocessing, Distributed and additional 1 worker process must be added proir to importing the `SpinnakerCameras` package
+
+```julia
+using Distributed
+addprocs(1)
+@everywhere import SpinnakerCameras as SC
+
+```
+
+A camera server is an interface to client processes trying to control a camera. To create a camera server from a physical camera, a `SharedCamera` has to be created. Then, a camera that we want to be shared has to be registered to the shared camera (multiple cameras can be registered to the shared camera). A `RemoteCamera` , which in this package is equivalent to camera server in a sense, is created using the shared camera and a pre-defined buffer size and a concrete type of array element which must be of the pixel format type.
+
+```julia
+dev = SC.create(SC.SharedCamera)
+shcam = SC.attach(SC.SharedCamera, dev.shmid)
+SC.register(shcam,camera)
+
+dims = (800,800)                                         # image size 800x800 pixels
+remcam = SC.RemoteCamera{UInt8}(shcam, dims)             # UInt8 pixel format
+```
+
+`RemoteCamera` contains 2 shared arrays for image data. One is a shared array for image data. The other is for a timestamp. Another shared array is for a command sent by a client process. At present, it allows to have only one client. A client send a command to the RemoteCamera by writing to the command shared array. The RemoteCamera reads the command and invokes the corresponding camera operation.
+
+To start running a camera server, the shmids of the image buffer, the image timestamp buffer, and the command shared array need to be broadcasted via writing to a file `shmids.txt` at `/tmp/SpinnakerCameras/`
+
+```julia
+img_shmid = SC.get_shmid(remcam.img)
+imgTime_shmid = SC.get_shmid(remcam.imgTime)
+cmds_shmid = SC.get_shmid(remcam.cmds)
+shmids = [img_shmid,imgTime_shmid,cmds_shmid]
+SC.broadcast_shmids(shmids)
+```
+Then, the RemoteCamera can start listening by
+
+```julia
+RemoteCameraEngine = SC.listening(shcam, remcam)
+```
+
+A set of camera parameters is stored in `ImageConfigContext` struct.
+
+```julia
+mutable struct ImageConfigContext
+    width::Int64
+    height::Int64
+    offsetX::Int64
+    offsetY::Int64
+    pixelformat::String
+
+    gainvalue::Float64
+    exposuretime::Float64
+    reversex::Bool
+    reversey::Bool
+
+    function ImageConfigContext()
+        max_width = 2048
+        max_height = 1536
+        return new(max_width, max_height, 0, 0,"Mono8",
+                    10.0, 100.0, false, false)
+    end
+end
+```
+
+To set parameters of a camera such as exposure time, the client has to write to a file `img_config.txt` at `/tmp/SpinnakerCameras`. After finish writing, the client can send a command to the RemoteCamera to re-configure the camera.
+
+### Image acquisition
+Image acquisition routine is spawned on a worker process. The image and timestamp are obtained from Spinnaker APIs and written to RemoteCamera shared arrays. The client can read from these shared arrays by attaching them to the local memory space.
+
+TODO: a mechanism to notify the client when a new frame is updated.
+
+**serial_camera_test.jl** contains an example of camera server\
+**reader.jl** read data from the broadcasted shmids of the shared array and calculate acquisition rate. To be run on a seperate Julia RELP after **serial_camera_test.jl** has started.

@@ -173,7 +173,8 @@ for (sym, func, type) in (
     end
 end
 
-# get data
+# get data :TODO data should return an array with the type corresponding to the 
+# pixel format
 function getproperty(img::Image , ::Val{:data})
     ref = Ref{Ptr{Cvoid}}(0)
     @checked_call(:spinImageGetData,(ImageHandle, Ptr{Ptr{Cvoid}}), handle(img), ref)
