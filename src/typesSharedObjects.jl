@@ -280,7 +280,12 @@ mutable struct RemoteCamera{T<:Number} <: AbstractCamera{T}
     worker_pid::Integer                 # worker pid for acquisition interrupting
 
     function RemoteCamera{T}(device::SharedCamera,dims::NTuple{2,Int64}) where {T<:Number}
+        # check data type
         isconcretetype(T) || error("pixel type $T must be concrete")
+        # check if the sharedcamera is already has registered cameras
+        num_registered_cam = sum(map(x -> isdefined(device.cameras,x),1:length(device.cameras)))
+        # num_registered_cam >= 1 ||  throw(ArgumentError("No registered cameras in the SharedCamera"))
+
         len = Int(device.listlength)
         arrays = fill!(Vector{Array{T,2}}(undef, len),zeros(dims))
         shmids = fill!(Vector{ShmId}(undef, len), -1)

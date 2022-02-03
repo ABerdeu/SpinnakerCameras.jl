@@ -2,8 +2,10 @@ using Revise
 using Distributed
 addprocs(1)
 
+# local package directory
 @everywhere using Pkg
 @everywhere Pkg.activate("/home/evwaco/SpinnakerCameras.jl/")
+
 @everywhere import SpinnakerCameras as SC
 
 
@@ -18,6 +20,7 @@ if camNum == 0
     print("No cameras found... \n Done...")
 
 end
+
 print("$(camNum) cameras are found \n" )
 
 camera = camList[1]
@@ -39,8 +42,10 @@ SC.broadcast_shmids(shmids)
 
 ## 2. initialize
 RemoteCameraEngine = SC.listening(shcam, remcam)
+
+
+##-- below is supposed to be done by remote clients
 remcam.cmds[1] = SC._to_Cint(SC.CMD_INIT)
-notify(remcam.no_cmds)
 
 ## 3. configure camera
 # update ImageConfigContext in shared camera
@@ -56,7 +61,6 @@ new_conf.offsetY = (1536-new_conf.height)/2
 ## configure
 SC.set_img_config(shcam,new_conf)
 remcam.cmds[1] = SC._to_Cint(SC.CMD_CONFIG)
-notify(remcam.no_cmds)
 
 ## 4. start acquisition
 remcam.cmds[1] = SC._to_Cint(SC.CMD_WORK)
@@ -64,8 +68,6 @@ notify(remcam.no_cmds)
 
 # 5. stop acquisition
 remcam.cmds[1] = SC._to_Cint(SC.CMD_STOP)
-notify(remcam.no_cmds)
 
 #6. update and restart acquisition
 remcam.cmds[1] = SC._to_Cint(SC.CMD_UPDATE)
-notify(remcam.no_cmds)
