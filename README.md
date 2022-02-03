@@ -196,6 +196,24 @@ Then, the RemoteCamera can start listening by
 ```julia
 RemoteCameraEngine = SC.listening(shcam, remcam)
 ```
+**Table of commands**
+
+| Command     | Integer code    |         Description       |
+| ----------- |:-------------:  | :-------------------------|           
+| Initialize  |        0        | Initialize a camera       |
+| Work        |        2        | Start acquisition         |
+| Stop        |        3        | Terminate acquisition     |
+| Configure   |        6        | Set the image parameters  |
+| Update      |        7        | Update the image parameters and restart acquisition routine     |
+| Reset       |        5        | power cycle the camera    |
+
+**Normal workflow:**
+1. Initialize   [0]
+2. Configure the image parameters [6]
+3. Start the image acquisition routine [2]
+4. Either *Stop* the acquisition loop [3] or update the image parameters and restart the acquisition routine [7]
+
+**ImageConfigContext**
 
 A set of camera parameters is stored in `ImageConfigContext` struct.
 
@@ -224,7 +242,7 @@ end
 To set parameters of a camera such as exposure time, the client has to write to a file `img_config.txt` at `/tmp/SpinnakerCameras`. After finish writing, the client can send a command to the RemoteCamera to re-configure the camera.
 
 ### Image acquisition
-Image acquisition routine is spawned on a worker process. The image and timestamp are obtained from Spinnaker APIs and written to RemoteCamera shared arrays. The client can read from these shared arrays by attaching them to the local memory space.
+Image acquisition routine is spawned on a worker process. The image and timestamp are obtained from Spinnaker APIs and written to RemoteCamera shared arrays. The client can read from these shared arrays by attaching them to the local memory space. As of now (January 2022), the way to tell if the image data is updated is by checking the timestamp
 
 TODO: a mechanism to notify the client when a new frame is updated.
 

@@ -40,11 +40,11 @@ cmds_shmid = SC.get_shmid(remcam.cmds)
 shmids = [img_shmid,imgTime_shmid,cmds_shmid]
 SC.broadcast_shmids(shmids)
 
-## 2. initialize
+## 2. initialize the camera server
 RemoteCameraEngine = SC.listening(shcam, remcam)
 
 
-##-- below is supposed to be done by remote clients
+##-- below operations are supposed to be done by remote clients
 remcam.cmds[1] = SC._to_Cint(SC.CMD_INIT)
 
 ## 3. configure camera
@@ -58,16 +58,13 @@ new_conf.height = 800
 new_conf.offsetX = (2048-new_conf.width )/2
 new_conf.offsetY = (1536-new_conf.height)/2
 
-## configure
 SC.set_img_config(shcam,new_conf)
+## configure
 remcam.cmds[1] = SC._to_Cint(SC.CMD_CONFIG)
 
 ## 4. start acquisition
 remcam.cmds[1] = SC._to_Cint(SC.CMD_WORK)
-notify(remcam.no_cmds)
-
-# 5. stop acquisition
+##5. stop acquisition
 remcam.cmds[1] = SC._to_Cint(SC.CMD_STOP)
-
-#6. update and restart acquisition
+##6. update and restart acquisition
 remcam.cmds[1] = SC._to_Cint(SC.CMD_UPDATE)
