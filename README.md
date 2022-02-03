@@ -5,10 +5,20 @@ The `SpinnakerCameras` package is to use cameras via the Spinnaker SDK
 
 ## Installation
 
-Copy file `deps/example-deps.jl` as `deps/deps.jl` and edit the value of
-constant `lib` to reflect the full path to the Spinnaker SDK dynamic library
-for C code.
+This package requires **TAO-RT** package. The specific commit of TAO_RT which results in a successful build of the package can be downloaded from [Here](https://git-cral.univ-lyon1.fr/tao/tao-rt/-/tree/a9d0d5dbd179bd0d567af0ff35903fea517d6642/).
 
+Follow the instruction to install TAO-RT. Upon completing, build SpinnakerCameras.jl by
+
+```julia
+using Pkg
+Pkg.build("SpinnakerCameras")
+```
+
+This will generate `deps.jl`. add this line to the file to locate the Spinnaker dynamic library.
+
+```julia
+const lib = "PATH_TO_SPINNAKER_LIBRARY"
+```
 
 ## Usage
 
