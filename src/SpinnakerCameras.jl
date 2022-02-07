@@ -7,8 +7,8 @@
 
 # __precompile__(false)
 module SpinnakerCameras
+
 using Printf
-# using Images
 using Dates
 using Base: @propagate_inbounds
 using Base.Threads
@@ -102,5 +102,13 @@ include("taoerrors.jl")
 include("camera.jl")
 include("acquisitions.jl")
 
+
+module SCImageViews
+using ..SpinnakerCameras
+using GtkReactive
+using Images, ImageView, Gtk.ShortNames
+include("gui.jl")
+export live_display
+end
 
 end # module

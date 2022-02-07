@@ -550,9 +550,9 @@ for (cmd, cam_op) in (
 @eval begin
     function next_camera_operation(::Val{$cmd}, shcam::SharedCamera, remcam::RemoteCamera)
         try
+            str_op = $cam_op
             @info "Executing  $str_op \n"
             cameraTask = $cam_op(shcam,remcam)
-            str_op = $cam_op
         catch ex
             if !isa(ex, SpinnakerCameras.CallError)
                 rethrow(ex)
@@ -586,11 +586,6 @@ init(shcam::SharedCamera,  remcam::RemoteCamera, ) = begin
     end
    nothing
 end
-"""
-    SpinnakerCameras.start(cam; skip=0, timeout=5.0)
-    Start camera acquisition loop on a worker process.
-    Sending data to shared arrays
-""" start
 
 start(shcam::SharedCamera,remcam::RemoteCamera ) = begin
 
@@ -627,18 +622,11 @@ function update(shcam::SharedCamera,remcam::RemoteCamera)
   config(shcam,remcam)
   @info "Camera configuration has been updated"
   working(1)
+  @info "Acquisition restarts"
   nothing
 end
 
 
-"""
-    SpinnakerCameras.stop(cam; timeout=5.0)
-
-    stops image acquisition by shared or remote camera `cam` not waiting more than
-    the limit set by `timeout` in seconds.  Nothing is done if acquisition is not
-    running or about to start.
-stop
-"""
 stop(shcam::SharedCamera,remcam::RemoteCamera) = begin
 
     shcam.attachedCam > 0 || throw(ErrorException("No attached cameras"))

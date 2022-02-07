@@ -43,16 +43,19 @@ SpinnakerCameras.set_exposuretime(camera, exposure_time)
     4. invoke data reading script --> read and save image
 
 =#
-#
+# create a shared array
 sharr = SpinnakerCameras.create(SpinnakerCameras.SharedArray{UInt8,2},
     (1536,2048), perms = 0o666)
 
+# attach shared array to the memory space
 arr = SpinnakerCameras.attach(SpinnakerCameras.SharedArray{UInt8}, sharr.shmid)
 
+# shared image
 while SpinnakerCameras.islocked(arr) end
 SpinnakerCameras.wrlock(arr,1.0) do
     SpinnakerCameras.acquire_n_share_image(camera, arr)
 end
+
 # display the image
 carr = convert(Array{Float16},arr)
 img = colorview(Gray,carr)

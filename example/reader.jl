@@ -1,10 +1,19 @@
-using SpinnakerCameras
+# reader.jl
+# grab data from the shared array numerous times
+# time the amount taken by the whole operation
+# use timestamps of the images to calculate average image acquisition rate
+
 using Statistics
 using Dates
-if pwd() != "/home/evwaco/SpinnakerCameras.jl/example"
-    cd("/home/evwaco/SpinnakerCameras.jl/example")
+using Printf
+if pwd() != "/home/evwaco/SpinnakerCameras.jl"
+    cd("/home/evwaco/SpinnakerCameras.jl")
 end
 
+using Pkg
+Pkg.activate(".")
+
+using SpinnakerCameras
 
 # read shmid from a text file
 fname = "shmids.txt"
@@ -25,6 +34,7 @@ saveNum = 900
 saveImg = Array{UInt8,3}(undef,800,800,saveNum)
 saveTs = Vector{UInt64}(undef,saveNum)
 local_ts = Vector{DateTime}(undef,saveNum)
+print("Time spent grabbing data ", saveNum," times =")
 @time for k in 1:saveNum
     imgHandle = SpinnakerCameras.rdlock(img,1) do
             img
@@ -61,4 +71,4 @@ for i in 2:counter[1]-1
     append!(timeDiff,[Int64(diffT)]/1e6)
 end
 
-println("Average image acquisition rate = $(mean(timeDiff)) ms")
+@printf "Average image acquisition rate = %.2f ms\n" mean(timeDiff)

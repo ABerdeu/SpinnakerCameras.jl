@@ -362,15 +362,14 @@ deinitializes Spinnaker camera `cam`.
 
 """
     SpinnakerCameras.start(cam)
-
-starts acquisition with Spinnaker camera `cam`.
+    starts acquisition with Spinnaker camera `cam`.
 
 """ start
 
 """
     SpinnakerCameras.stop(cam)
+    stops acquisition with Spinnaker camera `cam`.
 
-stops acquisition with Spinnaker camera `cam`.
 
 """ stop
 

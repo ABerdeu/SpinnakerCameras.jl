@@ -1,3 +1,8 @@
+# serial_camera_test.jl
+# Example script to demonstrate how a camera server works
+# the server grab and post image data , from the camera, to the local buffer,
+# to the shared mmemory in a serial order, which is not optimal for high-speed
+# applications.
 using Revise
 using Distributed
 addprocs(1)
@@ -7,8 +12,7 @@ addprocs(1)
 @everywhere Pkg.activate("/home/evwaco/SpinnakerCameras.jl/")
 
 @everywhere import SpinnakerCameras as SC
-
-
+##
 system = SC.System()
 camList = SC.CameraList(system)
 
@@ -45,13 +49,14 @@ RemoteCameraEngine = SC.listening(shcam, remcam)
 
 
 ##-- below operations are supposed to be done by remote clients
+# these operations are basically write integer to the first element of the shard
+# array assigned to store commands
 remcam.cmds[1] = SC._to_Cint(SC.CMD_INIT)
-
 ## 3. configure camera
 # update ImageConfigContext in shared camera
 new_conf = SC.ImageConfigContext()
-#  nanosecond exposure time
-new_conf.exposuretime = 5000.0
+#  microsecond exposure time max 14_799 μsec ≈ 14.8 ms
+new_conf.exposuretime = 20000.0
 # ROI
 new_conf.width = 800
 new_conf.height = 800
@@ -61,7 +66,6 @@ new_conf.offsetY = (1536-new_conf.height)/2
 SC.set_img_config(shcam,new_conf)
 ## configure
 remcam.cmds[1] = SC._to_Cint(SC.CMD_CONFIG)
-
 ## 4. start acquisition
 remcam.cmds[1] = SC._to_Cint(SC.CMD_WORK)
 ##5. stop acquisition
