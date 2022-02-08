@@ -47,7 +47,7 @@ end
 
 
 """
-   SpinnakerCameras.configure_exposure(camera,exposure_time)
+   SpinnakerCameras.set_exposure(camera,exposure_time)
 
 """ set_exposuretime
 function set_exposuretime(camera::Camera, exposure_time::Float64)
@@ -528,13 +528,6 @@ function work(camNum::Int64)
         end
     end
 end
-
-"""
-    aborting
-""" aborting
-aborting(camera::Camera) = stop(camera)
-
-
 
 #--- Camera utils
 

@@ -101,7 +101,7 @@ include("sharedcameras.jl")
 include("taoerrors.jl")
 include("camera.jl")
 include("acquisitions.jl")
-
+include("clients.jl")
 
 module SCImageViews
 using ..SpinnakerCameras

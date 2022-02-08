@@ -120,7 +120,7 @@ for sym in (
                                     setfield!(dev,Symbol($_sym),Int16(val))
 end
 
-set_img_config(shcam::SharedCamera, conf::ImageConfigContext) = setfield!(shcam,:img_config,conf)
+
 #--- RemoteCamera property
 
 propertynames(cam::RemoteCamera) =
@@ -344,6 +344,8 @@ const img_param = fieldnames(ImageConfigContext)
 const img_param_type = fieldtypes(ImageConfigContext)
 # parse(::Type{PixelFormat}, val::Int64) = PixelFormat(val)
 parse(::Type{String}, pixelformat_str::String) = pixelformat_str
+
+# read img_config.txt and update SharedCamera.img_config field
 function _read_and_update_config(shcam::SharedCamera)
     fname = "img_config.txt"
     path = "/tmp/SpinnakerCameras/"
@@ -357,7 +359,7 @@ function _read_and_update_config(shcam::SharedCamera)
       end
     end
     @show new_conf
-    set_img_config(shcam,new_conf)
+    setfield!(shcam,:img_config,new_conf)
   end
 
 
@@ -618,7 +620,6 @@ end
 """ update
 function update(shcam::SharedCamera,remcam::RemoteCamera)
   stop(shcam,remcam)
-  _read_and_update_config(shcam)
   config(shcam,remcam)
   @info "Camera configuration has been updated"
   working(1)
@@ -652,7 +653,7 @@ end
 config(shcam::SharedCamera,remcam::RemoteCamera) = begin
 
     shcam.attachedCam > 0 || throw(ErrorException("No attached cameras"))
-
+    _read_and_update_config(shcam)
     camera = device(shcam,1)
     try
       for param in fieldnames(ImageConfigContext)

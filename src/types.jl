@@ -115,6 +115,7 @@ mutable struct ImageConfigContext
     reversey::Bool
 
     function ImageConfigContext()
+        # FIXME:these numbers are overwritten in SharedCamera inner constructor
         max_width = 2048
         max_height = 1536
         return new(max_width, max_height, 0, 0,"Mono8",

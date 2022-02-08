@@ -229,7 +229,26 @@ mutable struct SharedCamera <: AbstractCamera{Any}
 
     # Provide a unique inner constructor which forces starting with a NULL
     # pointer and no finalizer.
-    SharedCamera() = new(C_NULL,ImageConfigContext(),0,Vector{Camera}(undef,5),5,1,0,0,0,UNLOCKED, false)
+    SharedCamera() = begin
+        fname = "img_config.txt"
+        path = "/tmp/SpinnakerCameras/"
+        img_conf = ImageConfigContext()
+
+        # adhoc hard-coded setup
+        img_conf.width = 800
+        img_conf.height = 800
+
+        open(joinpath(path,fname),"w") do f
+            for n in fieldnames(ImageConfigContext)
+              val = getfield(img_conf,n)
+              if isa(val, Bool)
+                val = Int(val)
+              end
+              write(f,@sprintf("%s\n",val))
+            end
+        end
+        new(C_NULL,img_conf,0,Vector{Camera}(undef,5),5,1,0,0,0,UNLOCKED, false)
+    end
 end
 
 

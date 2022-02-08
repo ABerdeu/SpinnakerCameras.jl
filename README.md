@@ -170,7 +170,9 @@ img.validpayloadsize # yields the valid payload size of `img`
 img.width            # yields the width of `img`
 ```
 ## Camera server
-`Taobindings.jl` provides tools to create camera server and implement  shared memory space . To allow for multiprocessing, Distributed and additional 1 worker process must be added proir to importing the `SpinnakerCameras` package
+
+### Details inside the server
+`Taobindings.jl` provides tools to create camera server and implement  shared memory space . To allow for multiprocessing, Distributed and additional 1 worker process must be added prior to importing the `SpinnakerCameras` package
 
 ```julia
 using Distributed
@@ -190,7 +192,7 @@ dims = (800,800)                                         # image size 800x800 pi
 remcam = SC.RemoteCamera{UInt8}(shcam, dims)             # UInt8 pixel format
 ```
 
-`RemoteCamera` contains 2 shared arrays for image data. One is a shared array for image data. The other is for a timestamp. Another shared array is for a command sent by a client process. At present, it allows to have only one client. A client send a command to the RemoteCamera by writing to the command shared array. The RemoteCamera reads the command and invokes the corresponding camera operation.
+`RemoteCamera` contains 2 shared arrays for image data. One is a shared array for image data. The other is for a timestamp. Another shared array is for a command sent by a client process. At present, it allows to have only one client. A client send a command to the RemoteCamera by writing to the frist index of the command shared array. The RemoteCamera reads the command and invokes the corresponding camera operation.
 
 To start running a camera server, the shmids of the image buffer, the image timestamp buffer, and the command shared array need to be broadcasted via writing to a file `shmids.txt` at `/tmp/SpinnakerCameras/`
 
@@ -206,22 +208,6 @@ Then, the RemoteCamera can start listening by
 ```julia
 RemoteCameraEngine = SC.listening(shcam, remcam)
 ```
-**Table of commands**
-
-| Command     | Integer code    |         Description       |
-| ----------- |:-------------:  | :-------------------------|           
-| Initialize  |        0        | Initialize a camera       |
-| Work        |        2        | Start acquisition         |
-| Stop        |        3        | Terminate acquisition     |
-| Configure   |        6        | Set the image parameters  |
-| Update      |        7        | Update the image parameters and restart acquisition routine     |
-| Reset       |        5        | power cycle the camera    |
-
-**Normal workflow:**
-1. Initialize   [0]
-2. Configure the image parameters [6]
-3. Start the image acquisition routine [2]
-4. Either *Stop* the acquisition loop [3] or update the image parameters and restart the acquisition routine [7]
 
 **ImageConfigContext**
 
@@ -251,10 +237,78 @@ end
 
 To set parameters of a camera such as exposure time, the client has to write to a file `img_config.txt` at `/tmp/SpinnakerCameras`. After finish writing, the client can send a command to the RemoteCamera to re-configure the camera.
 
-### Image acquisition
-Image acquisition routine is spawned on a worker process. The image and timestamp are obtained from Spinnaker APIs and written to RemoteCamera shared arrays. The client can read from these shared arrays by attaching them to the local memory space. As of now (January 2022), the way to tell if the image data is updated is by checking the timestamp
 
-TODO: a mechanism to notify the client when a new frame is updated.
 
-**serial_camera_test.jl** contains an example of camera server\
-**reader.jl** read data from the broadcasted shmids of the shared array and calculate acquisition rate. To be run on a seperate Julia RELP after **serial_camera_test.jl** has started.
+### Workflow Example
+1. Bring up a camera server
+
+```julia
+SpinnakerCameras.server()
+```
+This will bring up a server of the first camera attached to the GenICam Camera List.
+To specify a camera, give the keyword argument `SpinnakerCameras.server(camera_number::Int = )`
+
+2. Initialize the camera
+
+```julia
+SpinnakerCameras.send("initialize")
+```
+
+3. Configure camera parameters
+    - read camera parameters
+    - overwrite parameters of interest
+    - send configure command to the server
+
+```julia
+SpinnakerCameras.read_img_config()
+ # Here we want to set the exposure time and the gain
+SpinnakerCameras.write_img_config(exposuretime = 10000, gainvalue = 20.0)
+SpinnakerCameras.send("configure")
+```
+
+4. Start image acquisition
+
+```julia
+SpinnakerCameras.send("work")
+```
+
+5. Stop image acquisition
+
+```julia
+SpinnakerCameras.send("stop")
+```
+
+6. Update cameras parameters and restart image acquisition
+
+```julia
+SpinnakerCameras.read_img_config()
+# Here we want to reconfigure the exposure time
+SpinnakerCameras.write_img_config(exposuretime = 20000)
+
+SpinnakerCameras.send("update")
+```
+
+To check all commands `help(SpinnakerCameras.send)`
+
+`Note: the image size now is hard-coded to 800x800 pixel. Will fix in future release. `
+
+**Table of commands**
+
+| Command     | Integer code    |         Description       |
+| ----------- |:-------------:  | :-------------------------|           
+| initialize  |        0        | Initialize a camera       |
+| work        |        2        | Start acquisition         |
+| stop        |        3        | Terminate acquisition     |
+| configure   |        6        | Set the image parameters  |
+| update      |        7        | Update the image parameters and restart acquisition routine     |
+| reset       |        5        | power cycle the camera    |
+
+## SCImageViews submodule
+This submodule provides `live_display()` function which display real-time image grabbed from the shared array.
+
+```julia
+using SpinnakerCameras.SCImageViews
+live_display()
+
+```
+To kill the process, `Ctrl+C`
