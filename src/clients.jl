@@ -15,11 +15,6 @@
 function server(;camera_number::Int = 1)
     # add a process
     SpinnakerCameras.addprocs(1)
-
-    # local package directory
-    eval(macroexpand(Main,quote SpinnakerCameras.@everywhere using Pkg end))
-    @everywhere Pkg.activate("/home/evwaco/SpinnakerCameras.jl/")
-
     # load SpinnakerCameras module everywhere
     # a trick to use top-level expression inside a function
     eval(macroexpand(Main,quote SpinnakerCameras.@everywhere using SpinnakerCameras end))

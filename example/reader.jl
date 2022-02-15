@@ -10,9 +10,6 @@ if pwd() != "/home/evwaco/SpinnakerCameras.jl"
     cd("/home/evwaco/SpinnakerCameras.jl")
 end
 
-using Pkg
-Pkg.activate(".")
-
 using SpinnakerCameras
 
 # read shmid from a text file

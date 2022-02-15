@@ -1,13 +1,13 @@
 # gui.jl
 # image display based on ImageView
 """
-    live_display(delay::Float64 = 0.05)
+    live_display(delay::Float64 = 0.001)
     Read image from the image data shared array and display it
     Based on Images, ImageView
-    default update rate = 50 ms
+    default update rate = 1 ms
 """ live_display
 
-function live_display(delay::Float64 = 0.05)
+function live_display(delay::Float64 = 0.001)
     # read shmid from a text file
     fname = "shmids.txt"
     path = "/tmp/SpinnakerCameras/"
@@ -37,7 +37,6 @@ function live_display(delay::Float64 = 0.05)
             copyto!(img_handle,img_data)
             imshow(canvases,  Gray.(n0f8.(img_handle./256)))
         end
-        println()
 
         sleep(delay)
     end

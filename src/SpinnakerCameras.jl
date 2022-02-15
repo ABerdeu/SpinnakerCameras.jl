@@ -63,6 +63,10 @@ using ResizableArrays
 import Base.Libc: TimeVal
 using Base: @propagate_inbounds
 
+# export client functions
+export server, send, write_img_config, read_img_config
+
+
 # include dependents
 begin deps = normpath(joinpath(@__DIR__, "../deps/deps.jl"))
     isfile(deps) || error(

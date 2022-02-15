@@ -7,10 +7,7 @@ using Revise
 using Distributed
 addprocs(1)
 
-# local package directory
-@everywhere using Pkg
-@everywhere Pkg.activate("/home/evwaco/SpinnakerCameras.jl/")
-
+# load package
 @everywhere import SpinnakerCameras as SC
 ##
 system = SC.System()
@@ -53,17 +50,15 @@ RemoteCameraEngine = SC.listening(shcam, remcam)
 # array assigned to store commands
 remcam.cmds[1] = SC._to_Cint(SC.CMD_INIT)
 ## 3. configure camera
-# update ImageConfigContext in shared camera
-new_conf = SC.ImageConfigContext()
 #  microsecond exposure time max 14_799 μsec ≈ 14.8 ms
-new_conf.exposuretime = 20000.0
+exposuretime = 200.0
 # ROI
-new_conf.width = 800
-new_conf.height = 800
-new_conf.offsetX = (2048-new_conf.width )/2
-new_conf.offsetY = (1536-new_conf.height)/2
-
-SC.set_img_config(shcam,new_conf)
+width = 800
+height = 800
+offsetX = (2048-width )/2
+offsetY = (1536-height)/2
+write_img_config(width = width, height = height,offsetX = offsetX,
+                 offsetY = offsetY, exposuretime = exposuretime )
 ## configure
 remcam.cmds[1] = SC._to_Cint(SC.CMD_CONFIG)
 ## 4. start acquisition

@@ -243,15 +243,15 @@ To set parameters of a camera such as exposure time, the client has to write to 
 1. Bring up a camera server
 
 ```julia
-SpinnakerCameras.server()
+server()
 ```
 This will bring up a server of the first camera attached to the GenICam Camera List.
-To specify a camera, give the keyword argument `SpinnakerCameras.server(camera_number::Int = )`
+To specify a camera, give the keyword argument `server(camera_number::Int = )`
 
 2. Initialize the camera
 
 ```julia
-SpinnakerCameras.send("initialize")
+send("initialize")
 ```
 
 3. Configure camera parameters
@@ -260,35 +260,35 @@ SpinnakerCameras.send("initialize")
     - send configure command to the server
 
 ```julia
-SpinnakerCameras.read_img_config()
+read_img_config()
  # Here we want to set the exposure time and the gain
-SpinnakerCameras.write_img_config(exposuretime = 10000, gainvalue = 20.0)
-SpinnakerCameras.send("configure")
+write_img_config(exposuretime = 100.0, gainvalue = 20.0)
+send("configure")
 ```
 
 4. Start image acquisition
 
 ```julia
-SpinnakerCameras.send("work")
+send("work")
 ```
 
 5. Stop image acquisition
 
 ```julia
-SpinnakerCameras.send("stop")
+send("stop")
 ```
 
 6. Update cameras parameters and restart image acquisition
 
 ```julia
-SpinnakerCameras.read_img_config()
+read_img_config()
 # Here we want to reconfigure the exposure time
-SpinnakerCameras.write_img_config(exposuretime = 20000)
+write_img_config(exposuretime = 2000.0)
 
-SpinnakerCameras.send("update")
+send("update")
 ```
 
-To check all commands `help(SpinnakerCameras.send)`
+To check all commands `help(send)`
 
 `Note: the image size now is hard-coded to 800x800 pixel. Will fix in future release. `
 
