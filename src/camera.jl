@@ -221,6 +221,9 @@ function set_width(camera::Camera, width::Int64)
     isreadable(WidthNode)
     widthMax = getmax(Int64, WidthNode)
     widthMin = getmin(Int64, WidthNode)
+
+    # rounding to 4-byte integer
+
     if width > widthMax
          width = widthMax
         @warn "width is bounded to $width"
@@ -228,6 +231,7 @@ function set_width(camera::Camera, width::Int64)
         width = widthMin
         @warn "width is bounded to $width"
    end
+
 
     setValue(WidthNode,width)
 end
@@ -434,10 +438,11 @@ end
     Work
     create image buffer, and start image acquisition.
 """ work
-function working(camNum::Int64)
+function working(camNum::Int64,T::Type)
       w = workers()
+
       try
-         remote_do(SpinnakerCameras.work,w[1],camNum)
+         remote_do(SpinnakerCameras.work,w[1],camNum,T)
 
      catch e
          @info e
@@ -446,7 +451,7 @@ function working(camNum::Int64)
  end
 
 
-function work(camNum::Int64)
+function work(camNum::Int64, T::Type)
     Base.exit_on_sigint(false)
 
     system = SpinnakerCameras.System()
@@ -466,7 +471,7 @@ function work(camNum::Int64)
     SpinnakerCameras.set_acquisitionmode(camera, "Continuous")
 
     # attach shared array in a remote process
-    img_array, imgTime_array = SpinnakerCameras.attach_remote_process()
+    img_array, imgTime_array = SpinnakerCameras.attach_remote_process(T)
     # begin acquisition
     SpinnakerCameras.start(camera)
     counter = 0

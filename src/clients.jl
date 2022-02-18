@@ -6,13 +6,15 @@
     SpinnakerCameras.CameraServer.server(;camera_number::Integer = 1)
 
     A single command that bring up a camera server. It chooses the first GenICam
-    in the camera list by default
+    in the camera list by default. The dims is the dimension of the requested image.
+    The dimensions can't be changed when the server is  initialized. Reconfiguration
+    of the image
 
 """ server
 
 #TODO: reconfigurable remote camera dimension
 
-function server(;camera_number::Int = 1)
+function server(; camera_number::Int = 1)
     # add a process
     SpinnakerCameras.addprocs(1)
     # load SpinnakerCameras module everywhere
@@ -22,7 +24,6 @@ function server(;camera_number::Int = 1)
     # bring uop the system
     system = SpinnakerCameras.System()
     camList = SpinnakerCameras.CameraList(system)
-
     camNum = length(camList)
 
     if camNum == 0
@@ -38,8 +39,16 @@ function server(;camera_number::Int = 1)
     shcam = SpinnakerCameras.attach(SpinnakerCameras.SharedCamera, dev.shmid)
 
     SpinnakerCameras.register(shcam,camera)
-    dims = (800,800)
-    remcam = SpinnakerCameras.RemoteCamera{UInt8}(shcam, dims)
+
+    @label restart
+
+    # create RemoteCamera
+    _pixelformat = shcam.img_config.pixelformat
+    _dataType = get(PixelFormat,_pixelformat, Real)
+    dims = (shcam.img_config.width, shcam.img_config.height)
+    println("Image size ", dims)
+    println("Data type ", _dataType)
+    remcam = SpinnakerCameras.RemoteCamera{_dataType}(shcam, dims)
 
     #-listening
     # broadcasting shmid of cmds, state, img, imgBuftime, remote camera monitor
@@ -50,7 +59,16 @@ function server(;camera_number::Int = 1)
     SpinnakerCameras.broadcast_shmids(shmids)
 
     ## initialize the camera server
-    SpinnakerCameras.listening(shcam, remcam)
+    task = SpinnakerCameras.listening(shcam, remcam)
+    wait(task)
+
+    if restartListening.status ==1
+       @info "server has to restart.."
+       restartListening.status = 0
+       @goto restart
+    else
+        error("Server quits unexpectedly")
+    end
 end
 
 """
@@ -137,7 +155,14 @@ function write_img_config(;kwargs...)
     end
 
     for (key, val) in kwargs
-        setfield!(img_conf, Symbol(key), val)
+        if  (key == :width) || (key == :height)
+            if (val%16 != 0)
+            val = Int64(floor(val/16)*16)
+            @warn "$key is rounded to $val"
+            end
+
+        end
+        setfield!(img_conf, key, val)
     end
     # write to the text file
     fname = "img_config.txt"

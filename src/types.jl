@@ -113,15 +113,31 @@ mutable struct ImageConfigContext
     exposuretime::Float64
     reversex::Bool
     reversey::Bool
+    function ImageConfigContext(w::Int64, h::Int64, ox::Int64, oy::Int64,
+        pf::String, g::Float64, e::Float64, rx::Bool, ry::Bool)
 
-    function ImageConfigContext()
-        # FIXME:these numbers are overwritten in SharedCamera inner constructor
-        max_width = 2048
-        max_height = 1536
-        return new(max_width, max_height, 0, 0,"Mono8",
-                    10.0, 100.0, false, false)
+        return new(w, h, ox, oy, pf, g, e, rx, ry)
     end
+
+
 end
+# default template
+function ImageConfigContext()
+
+    # max_width = 2048
+    # max_height = 1536
+    return ImageConfigContext(200, 200, 0, 0,"Mono8",10.0, 100.0, false, false)
+end
+Base.copy(s::ImageConfigContext) = ImageConfigContext(s.width, s.height, s.offsetX,
+                                                    s.offsetY, s.pixelformat,
+                                                    s.gainvalue, s.exposuretime,
+                                                    s.reversex, s.reversey )
+
+# pixelformat and Julia data type
+const PixelFormat = Dict(
+                    "Mono8"     =>  UInt8,
+                    "Mono16"    =>  UInt16
+                    )
 
 mutable struct Image <: SpinObject
     # The `created` member of images is to distinguish between the two kinds of

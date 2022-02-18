@@ -230,24 +230,21 @@ mutable struct SharedCamera <: AbstractCamera{Any}
     # Provide a unique inner constructor which forces starting with a NULL
     # pointer and no finalizer.
     SharedCamera() = begin
+        # read from the existing file
         fname = "img_config.txt"
         path = "/tmp/SpinnakerCameras/"
-        img_conf = ImageConfigContext()
-
-        # adhoc hard-coded setup
-        img_conf.width = 800
-        img_conf.height = 800
-
-        open(joinpath(path,fname),"w") do f
-            for n in fieldnames(ImageConfigContext)
-              val = getfield(img_conf,n)
-              if isa(val, Bool)
-                val = Int(val)
-              end
-              write(f,@sprintf("%s\n",val))
-            end
+        fname ∈ readdir(path) || throw(LoadError("image config doest not exist"))
+        f = open(path*fname,"r" )
+        rd = readlines(f)
+        new_conf = ImageConfigContext()
+        for i in 1:length(rd)
+          if !isempty(rd[i])
+            setfield!(new_conf,img_param[i],parse(img_param_type[i],rd[i]))
+          end
         end
-        new(C_NULL,img_conf,0,Vector{Camera}(undef,5),5,1,0,0,0,UNLOCKED, false)
+        @show new_conf
+
+        new(C_NULL,new_conf,0,Vector{Camera}(undef,5),5,1,0,0,0,UNLOCKED, false)
     end
 end
 
@@ -284,7 +281,7 @@ properties as a shared camera plus
 
 mutable struct RemoteCamera{T<:Number} <: AbstractCamera{T}
     #data buffers imitating grabber
-    arrays::Vector{Array{T,2}} # list of attached shared arrays
+    arrays::Vector{Array{T,2}}      # list of attached shared arrays
     timestamps::Vector{UInt64}         # list of timestamps of the shared array
 
     shmids::Vector{ShmId}            # list of corresponding identifiers
@@ -337,10 +334,13 @@ end
 
 const RemoteCameraOutput{T} = DynamicArray{T,2}
 const RemoteCameraOutputs{N,T} = NTuple{N,DynamicArray{T,2}}
+
+
 #--- Monitor
 _to_Cint(state::RemoteCameraState) =  state.state
 _to_Cint(cmd::RemoteCameraCommand) =  cmd.cmd
 _to_Cint(sig::ShCamSIG) = sig.sig
+
 
 abstract type AbstractMonitor end
 

@@ -325,8 +325,8 @@ function register(dev::SharedCamera, cam::Camera)
     catch
         throw(ErrorException("No more space to attach cameras"))
     end
-end
 
+end
 
 function broadcast_shmids(shmids::Vector{ShmId})
     fname = "shmids.txt"
@@ -350,7 +350,7 @@ function _read_and_update_config(shcam::SharedCamera)
     fname = "img_config.txt"
     path = "/tmp/SpinnakerCameras/"
     fname ∈ readdir(path) || throw(LoadError("image config doest not exist"))
-    f = open(path*fname,"r")
+    f = open(path*fname,"r" )
     rd = readlines(f)
     new_conf = shcam.img_config
     for i in 1:length(rd)
@@ -429,23 +429,29 @@ listening(shcam::SharedCamera, remcam::RemoteCamera) = @async _listening(shcam, 
 function _listening(shcam::SharedCamera, remcam::RemoteCamera)
 
     while true
-    # check the command
-    @info "wait cmds"
+      # check the command
+      @info "wait cmds"
 
-    @async _keep_checking_cmds(remcam.cmds, remcam.no_cmds )
-    wait(remcam.no_cmds)
-    #  read new cmd
-    cmd = rdlock(remcam.cmds,0.5) do
-        pop!(remcam.cmds)
-    end
-    # sent the command to the camera
-    if next_camera_operation(RemoteCameraCommand(cmd),shcam, remcam)
-      @info "Command successful..."
-    else
-      @info "Command failed..."
-    end
+      @async _keep_checking_cmds(remcam.cmds, remcam.no_cmds )
+      wait(remcam.no_cmds)
+      #  read new cmd
+      cmd = rdlock(remcam.cmds,0.5) do
+          pop!(remcam.cmds)
+      end
+      # sent the command to the camera
+      if next_camera_operation(RemoteCameraCommand(cmd),shcam, remcam)
+        @info "Command successful..."
+      else
+        @info "Command failed..."
+      end
+      println("restart status = ",restartListening.status)
+      # if the flag is set to 1
+      restartListening.status  == 1 && break
 
-  end
+    end
+    @info "stop listening.."
+    return nothing
+
 end
 
 """
@@ -515,7 +521,7 @@ function attach_monitor_mutex!(monitor::AbstractMonitor, shmid::Integer)
 end
 
 # attached image and image timestamp shared array on a worker process
-function attach_remote_process()
+function attach_remote_process(T::Type)
     # read shared array shmids
     fname = "/tmp/SpinnakerCameras/shmids.txt"
     f = open(fname,"r")
@@ -525,7 +531,7 @@ function attach_remote_process()
       push!(shmids,parse(Int64,line))
     end
 
-    img_array = attach(SharedArray{UInt8},shmids[1])
+    img_array = attach(SharedArray{T},shmids[1])
     imgTime_array = attach(SharedArray{UInt64},shmids[2])
 
     return img_array, imgTime_array
@@ -583,6 +589,14 @@ init(shcam::SharedCamera,  remcam::RemoteCamera, ) = begin
     try
         initialize(camera)
 
+        # configure the camera
+        for param in fieldnames(ImageConfigContext)
+              _param = "$param"
+              val =  getfield(shcam.img_config,param)
+              @eval func = $(Symbol("set_",param))
+              func(camera,val)
+        end
+
     catch ex
         rethrow(ex)
     end
@@ -594,11 +608,12 @@ start(shcam::SharedCamera,remcam::RemoteCamera ) = begin
     shcam.attachedCam > 0 || throw(ErrorException("No attached cameras"))
 
     camera = device(shcam,1)
+    dataType = eltype(remcam)
     pid =[0]
     try
-    # start working
-    pid[1] = working(1)
-    @info "worker pid = $(pid[1])"
+      # start working
+      pid[1] = working(1, dataType)
+      @info "worker pid = $(pid[1])"
 
     catch ex
       println(ex)
@@ -653,14 +668,26 @@ end
 config(shcam::SharedCamera,remcam::RemoteCamera) = begin
 
     shcam.attachedCam > 0 || throw(ErrorException("No attached cameras"))
+    # save previous setting
+    cached_imgConfig = copy(shcam.img_config)
+
     _read_and_update_config(shcam)
+
     camera = device(shcam,1)
     try
       for param in fieldnames(ImageConfigContext)
             _param = "$param"
-            val =  getfield(shcam.img_config,param)
-            @eval func = $(Symbol("set_",param))
-            func(camera,val)
+            valOld = getfield(cached_imgConfig, param)
+            valNew =  getfield(shcam.img_config,param)
+
+            if valOld != valNew
+              # if width or height changed -> restart RemoteCamera
+              if (_param == "width") || (_param == "height") || (_param = "pixelformat")
+                 restartListening.status = 1
+              end
+              @eval func = $(Symbol("set_",param))
+              func(camera,valNew)
+            end
       end
 
     catch ex

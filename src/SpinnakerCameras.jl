@@ -63,6 +63,10 @@ using ResizableArrays
 import Base.Libc: TimeVal
 using Base: @propagate_inbounds
 
+mutable struct RestartListening
+    status::Integer
+end
+
 # export client functions
 export server, send, write_img_config, read_img_config
 
@@ -90,6 +94,9 @@ function __init__()
     end
     nothing
 end
+
+# introduce ad-hoc global scope monitor instance
+restartListening = RestartListening(0)
 
 # Spinnaker interface
 include("macros.jl")
