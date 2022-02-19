@@ -369,7 +369,7 @@ for (cmd, now_state, next_state) in (
         (:CMD_INIT,  :STATE_UNKNOWN   ,   STATE_INIT),
         (:CMD_WORK,  :STATE_WAIT      ,   STATE_WORK),
         (:CMD_STOP,  :STATE_WORK      ,   STATE_WAIT),
-        (:CMD_QUIT,  :STATE_WAIT      ,   STATE_QUIT),
+
     )
 
     @eval sort_next_state(::Val{$cmd}, ::Val{$now_state}) = $next_state
@@ -380,8 +380,6 @@ for (sig, cmd, next_state) in (
         (:SIG_DONE,  :CMD_INIT      ,   STATE_WAIT),
         (:SIG_DONE,  :CMD_STOP      ,   STATE_WAIT),
         (:SIG_DONE,  :CMD_WORK      ,   STATE_WORK),
-        (:SIG_DONE,  :CMD_ABORT     ,   STATE_WAIT),
-        (:SIG_DONE,  :CMD_QUIT      ,   STATE_QUIT),
         (:SIG_ERROR,  :CMD_WORK      ,   STATE_ERROR),
     )
 

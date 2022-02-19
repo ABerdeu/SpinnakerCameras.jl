@@ -220,24 +220,27 @@ mutable struct ImageConfigContext
     offsetX::Int64
     offsetY::Int64
     pixelformat::String
-
     gainvalue::Float64
     exposuretime::Float64
     reversex::Bool
-    reversey::Bool
+    reversey::Bool  
 
-    function ImageConfigContext()
-        max_width = 2048
-        max_height = 1536
-        return new(max_width, max_height, 0, 0,"Mono8",
-                    10.0, 100.0, false, false)
+    function ImageConfigContext(w::Int64, h::Int64, ox::Int64, oy::Int64,
+        pf::String, g::Float64, e::Float64, rx::Bool, ry::Bool)
+
+        return new(w, h, ox, oy, pf, g, e, rx, ry)
     end
+end
+
+# Default template
+function ImageConfigContext()
+    return ImageConfigContext(200, 200, 0, 0,"Mono8",10.0, 100.0, false, false)
 end
 ```
 
-To set parameters of a camera such as exposure time, the client has to write to a file `img_config.txt` at `/tmp/SpinnakerCameras`. After finish writing, the client can send a command to the RemoteCamera to re-configure the camera.
+To set parameters of a camera such as exposure time, the client has to write to a file `img_config.txt` at `/tmp/SpinnakerCameras`. After finish writing, the client can send "configure" command to the RemoteCamera to re-configure the camera.
 
-
+**Note:** Available pixel formats at the current version are only "Mono8" and "Mono16"
 
 ### Workflow Example
 1. Bring up a camera server
@@ -290,17 +293,19 @@ send("update")
 
 To check all commands `help(send)`
 
-`Note: the image size now is hard-coded to 800x800 pixel. Will fix in future release. `
+**Important Notes:**
+1. When the size or the pixel format of the image is reconfigured, the camera server needs to stop and recreate a remote camera with a compatible data array. The shmids could change during the process. The client should update the target shmids in `shmids.txt`.
+2. `write_img_config` guarantees the dimensions of the image are 16-pixel integers. If another program is writing the image dimensions to `img_config.txt`, that program should check the validity of the dimensions input by itself.
 
 **Table of commands**
 
 | Command     | Integer code    |         Description       |
 | ----------- |:-------------:  | :-------------------------|           
 | initialize  |        0        | Initialize a camera       |
+| configure   |        1        | Set the image parameters  |
 | work        |        2        | Start acquisition         |
 | stop        |        3        | Terminate acquisition     |
-| configure   |        6        | Set the image parameters  |
-| update      |        7        | Update the image parameters and restart acquisition routine     |
+| update      |        4        | Update the image parameters and restart acquisition routine     |
 | reset       |        5        | power cycle the camera    |
 
 ## SCImageViews submodule

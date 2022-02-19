@@ -47,7 +47,7 @@ function server(; camera_number::Int = 1)
     _dataType = get(PixelFormat,_pixelformat, Real)
     dims = (shcam.img_config.width, shcam.img_config.height)
     println("Image size ", dims)
-    println("Data type ", _dataType)
+    pritnln("Data type ", _dataType )
     remcam = SpinnakerCameras.RemoteCamera{_dataType}(shcam, dims)
 
     #-listening

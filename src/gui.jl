@@ -19,12 +19,25 @@ function live_display(delay::Float64 = 0.001)
     end
     close(f)
 
-    img_data = SpinnakerCameras.attach(SpinnakerCameras.SharedArray{UInt8},shmid[1])
+    # read image format
+    fname = "img_config.txt"
+    path = "/tmp/SpinnakerCameras/"
+    fname ∈ readdir(path) || throw(LoadError("image config doest not exist"))
+    f = open(path*fname,"r" )
+    rd = readlines(f)
+    _width = rd[1]
+    _height = rd[2]
+    _pixelformat = rd[5]
+
+    dataType = get(SpinnakerCameras.PixelFormat,_pixelformat, Real)
+
+    img_data = SpinnakerCameras.attach(SpinnakerCameras.SharedArray{dataType},shmid[1])
     imgTime = SpinnakerCameras.attach(SpinnakerCameras.SharedArray{UInt64},shmid[2])
 
     # initiate Gtk Window
     img_size = size(img_data)
     img0 = Gray.(n0f8.(ones(img_size)))
+    
     window = imshow_gui((600, 600), (1, 1))  # 2 columns, 1 row of images (each initially 300×300)
     canvases = window["canvas"]
     imshow(canvases, img0)

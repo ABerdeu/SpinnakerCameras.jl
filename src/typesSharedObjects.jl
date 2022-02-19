@@ -137,14 +137,11 @@ struct RemoteCameraCommand
 end
 
 const   CMD_INIT  = RemoteCameraCommand(0)
-const   CMD_WAIT  = RemoteCameraCommand(1)
+const   CMD_CONFIG  = RemoteCameraCommand(1)
 const   CMD_WORK = RemoteCameraCommand(2)
 const   CMD_STOP  = RemoteCameraCommand(3)
-const   CMD_ABORT  = RemoteCameraCommand(4)
+const   CMD_UPDATE = RemoteCameraCommand(4)
 const   CMD_RESET  = RemoteCameraCommand(5)
-const   CMD_CONFIG  = RemoteCameraCommand(6)
-const   CMD_UPDATE = RemoteCameraCommand(7)
-const   CMD_QUIT  = RemoteCameraCommand(8)
 
 
 struct ShCamSIG
