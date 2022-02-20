@@ -35,7 +35,7 @@ function server(; camera_number::Int = 1)
 
     camera = camList[camera_number]
 
-    dev = SpinnakerCameras.create(SpinnakerCameras.SharedCamera)
+    dev = SpinnakerCameras.create(SpinnakerCameras.SharedCamera, perms = 0o606)
     shcam = SpinnakerCameras.attach(SpinnakerCameras.SharedCamera, dev.shmid)
 
     SpinnakerCameras.register(shcam,camera)

@@ -304,13 +304,13 @@ mutable struct RemoteCamera{T<:Number} <: AbstractCamera{T}
         shmids = fill!(Vector{ShmId}(undef, len), -1)
         timestamps = fill!(Vector{UInt64}(undef,len), 0)
 
-        _cmds= create(SharedArray{Cint,1},2)
+        _cmds= create(SharedArray{Cint,1},2, perms = 0o606)
         cmds = attach(SharedArray, _cmds.shmid)
 
-        imgBuff = create(SharedArray{T,2},dims)
+        imgBuff = create(SharedArray{T,2},dims, perms = 0o604)
         img = attach(SharedArray, imgBuff.shmid)
 
-        imgTimeBuff = create(SharedArray{UInt64,1},1)
+        imgTimeBuff = create(SharedArray{UInt64,1},1, perms = 0o604)
         imgTime = attach(SharedArray, imgTimeBuff.shmid)
 
         wrlock(cmds, 0.5) do
