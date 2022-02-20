@@ -677,10 +677,10 @@ config(shcam::SharedCamera,remcam::RemoteCamera) = begin
             _param = "$param"
             valOld = getfield(cached_imgConfig, param)
             valNew =  getfield(shcam.img_config,param)
-
+            @show _param
             if valOld != valNew
-              # if width or height changed -> restart RemoteCamera
-              if (_param == "width") || (_param == "height") || (_param = "pixelformat")
+              # if width or height or pixelformat changed -> restart RemoteCamera
+              if (_param == "width") || (_param == "height") || (_param == "pixelformat")
                  restartListening.status = 1
               end
               @eval func = $(Symbol("set_",param))

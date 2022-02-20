@@ -47,7 +47,7 @@ function server(; camera_number::Int = 1)
     _dataType = get(PixelFormat,_pixelformat, Real)
     dims = (shcam.img_config.width, shcam.img_config.height)
     println("Image size ", dims)
-    pritnln("Data type ", _dataType )
+    println("Data type ", _dataType )
     remcam = SpinnakerCameras.RemoteCamera{_dataType}(shcam, dims)
 
     #-listening
@@ -79,17 +79,17 @@ end
     | String Command | Integer code    |         Description       |
     | -------------- |:-------------:  | :-------------------------|
     | initialize     |        0        | Initialize a camera       |
+    | configure      |        1        | Set the image parameters  |
     | work           |        2        | Start acquisition         |
     | stop           |        3        | Terminate acquisition     |
-    | configure      |        6        | Set the image parameters  |
-    | update         |        7        | reconfigure and restart   |
+    | update         |        4        | reconfigure and restart   |
     | reset          |        5        | power cycle the camera    |
 
     eg. SpinnakerCameras.send("initialize")
 
 """ send
-const cmd_string  = ["initialize", "work", "stop", "configure","update", "reset"]
-const cmd_numeric = [0           , 2     , 3     , 6          , 7      , 5      ]
+const cmd_string  = ["initialize", "configure", "work", "stop", "update", "reset"]
+const cmd_numeric = [0           , 1          , 2     ,  3    , 4       , 5      ]
 const cmd_string_num_pair = Dict(cmd_string .=> cmd_numeric)
 
 function send(cmdString::AbstractString)

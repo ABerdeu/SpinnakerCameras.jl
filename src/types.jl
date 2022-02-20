@@ -126,7 +126,7 @@ function ImageConfigContext()
 
     # max_width = 2048
     # max_height = 1536
-    return ImageConfigContext(200, 200, 0, 0,"Mono8",10.0, 100.0, false, false)
+    return ImageConfigContext(288, 288, 0, 0,"Mono8",10.0, 100.0, false, false)
 end
 Base.copy(s::ImageConfigContext) = ImageConfigContext(s.width, s.height, s.offsetX,
                                                     s.offsetY, s.pixelformat,

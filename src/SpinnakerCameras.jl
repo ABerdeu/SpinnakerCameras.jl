@@ -115,6 +115,7 @@ include("acquisitions.jl")
 include("clients.jl")
 
 module SCImageViews
+ENV["REACTIVE_CHANNEL_SIZE"] = 4096
 using ..SpinnakerCameras
 using GtkReactive
 using Images, ImageView, Gtk.ShortNames
