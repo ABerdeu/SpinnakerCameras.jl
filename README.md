@@ -284,11 +284,13 @@ send("stop")
 6. Update cameras parameters and restart image acquisition
 
 ```julia
+# if the camera is working
+send("stop")
+# read the config text file
 read_img_config()
 # Here we want to reconfigure the exposure time
 write_img_config(exposuretime = 2000.0)
-
-send("update")
+send("configure")
 ```
 
 To check all commands `help(send)`
