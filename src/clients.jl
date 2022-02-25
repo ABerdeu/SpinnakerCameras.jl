@@ -157,12 +157,14 @@ function write_img_config(;kwargs...)
     for (key, val) in kwargs
         if  (key == :width) || (key == :height)
             if (val%16 != 0)
-            val = Int64(floor(val/16)*16)
-            @warn "$key is rounded to $val"
+                val = Int64(floor(val/16)*16)
+                @warn "$key is rounded to $val"
             end
 
         end
         setfield!(img_conf, key, val)
+        key == :width ? setfield!(img_conf, :offsetX, get_offset(val,max_width)) : nothing
+        key == :height ? setfield!(img_conf, :offsetY, get_offset(val,max_height)) : nothing
     end
     # write to the text file
     fname = "img_config.txt"

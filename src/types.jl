@@ -21,7 +21,8 @@ struct CallError <: Exception
     name::Symbol # symbolic name of error
 end
 
-
+const max_width = 2048
+const max_height = 1536
 """
 
 `TaoBindings.AbstractHighResolutionTime` is the parent type of time types with
@@ -94,6 +95,9 @@ SensorShutterMode = Dict(1=>"Global",
                          3 => "GlobalReset"
                         )
 
+get_offset(len::Int64,maxlen::Int64) =convert(Int64, (maxlen-len)/2)
+
+
 """
     igContext
     stores configuration parameters for the hardware to be set prior to the
@@ -123,10 +127,10 @@ mutable struct ImageConfigContext
 end
 # default template
 function ImageConfigContext()
+    offsetX = get_offset(288,max_width)
+    offsetY = get_offset(288,max_height)
 
-    # max_width = 2048
-    # max_height = 1536
-    return ImageConfigContext(288, 288, 0, 0,"Mono8",10.0, 100.0, false, false)
+    return ImageConfigContext(288, 288, offsetX, offsetY,"Mono8",10.0, 100.0, false, false)
 end
 Base.copy(s::ImageConfigContext) = ImageConfigContext(s.width, s.height, s.offsetX,
                                                     s.offsetY, s.pixelformat,

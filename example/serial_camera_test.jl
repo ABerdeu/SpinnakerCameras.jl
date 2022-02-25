@@ -9,7 +9,7 @@ addprocs(1)
 
 # load package
 @everywhere import SpinnakerCameras as SC
-##
+##=
 system = SC.System()
 camList = SC.CameraList(system)
 
