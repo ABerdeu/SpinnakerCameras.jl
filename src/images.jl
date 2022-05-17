@@ -53,6 +53,67 @@ function next_image(camera::Camera, seconds::Real)
     return Image(ref[], false)
 end
 
+
+"""
+    img_Float = convert_UInt2Float(img_UInt)
+    Converts a table of integers (UInt8 or UInt16) into a table of reals
+    numbers (Float32)
+""" convert_UInt2Float
+convert_UInt2Float(img_handle::Array{UInt8,2}) =  Float32.(img_handle./2^8)
+convert_UInt2Float(img_handle::Array{UInt16,2}) =  Float32.(img_handle./2^16)
+
+
+"""
+    frame = next_frame(camera::Camera)
+    yiedls the next frame from camera `cam`.
+""" next_frame
+function next_frame(camera::Camera)
+
+    # Starting the camera if needed
+    flag_streaming = isstreaming(camera)
+    if !flag_streaming
+        start(camera)
+    end
+
+    flag_success = false
+    while !flag_success
+        img =
+            try
+                next_image(camera)
+            catch ex
+                if (!isa(ex, SpinnakerCameras.CallError) ||
+                   ex.code != SpinnakerCameras.SPINNAKER_ERR_TIMEOUT)
+                   rethrow(ex)
+               end
+               nothing
+           end
+
+       # check image completeness
+       if img.incomplete == 1
+           print("Image is incomplete.. skipped \n")
+           finalize(img)
+
+       elseif img.status != 0
+           print("Image has error.. skipped \n")
+           finalize(img)
+       else
+           flag_success = true
+       end
+
+       # return the frame
+       frame = convert_UInt2Float(img.data)
+       finalize(img)
+
+       # Stopping the camera if needed
+       if !flag_streaming
+           stop(camera)
+       end
+
+       return frame
+    end
+end
+
+
 """
     img = SpinnakerCameras.Image(pixelformat, (width, height); offsetx=0, offsety=0)
 
@@ -173,7 +234,7 @@ for (sym, func, type) in (
     end
 end
 
-# get data :TODO data should return an array with the type corresponding to the 
+# get data :TODO data should return an array with the type corresponding to the
 # pixel format
 function getproperty(img::Image , ::Val{:data})
     ref = Ref{Ptr{Cvoid}}(0)
@@ -183,7 +244,11 @@ function getproperty(img::Image , ::Val{:data})
     imgH = convert(Int64,img.height)
     imgW = convert(Int64,img.width)
 
-    dataArr = unsafe_wrap(Array{UInt8,2}, Ptr{UInt8}(dataPtr), (imgH,imgW))
+    if img.pixelformat == 1 # Mono16
+        dataArr = unsafe_wrap(Array{UInt16,2}, Ptr{UInt16}(dataPtr), (imgW,imgH))
+    else # Mono8
+        dataArr = unsafe_wrap(Array{UInt8,2}, Ptr{UInt8}(dataPtr), (imgW,imgH))
+    end
     return dataArr
 
 end
