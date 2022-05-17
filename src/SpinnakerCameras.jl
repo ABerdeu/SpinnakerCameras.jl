@@ -78,49 +78,13 @@ begin deps = normpath(joinpath(@__DIR__, "../deps/deps.jl"))
     include(deps)
 end
 
-# prepare files
-function __init__()
-    img_fname = "img_config.txt"
-    path = "/tmp/SpinnakerCameras/"
-    shmid_fname = "shmids.txt"
-    try
-        mkdir(path)
-        touch(joinpath(path,img_fname))
-        touch(joinpath(path,shmid_fname))
-    catch InitError
-        @warn "files already exist"
-    finally
-        @info "image configuration and shmids files are created in $path"
-    end
-    nothing
-end
-
-# introduce ad-hoc global scope monitor instance
-restartListening = RestartListening(0)
-
 # Spinnaker interface
 include("macros.jl")
 include("types.jl")
 include("errors.jl")
 include("methods.jl")
 include("images.jl")
-include("typesSharedObjects.jl")
-include("times.jl")
-include("sharedobjects.jl")
-include("sharedarrays.jl")
-include("sharedcameras.jl")
-include("taoerrors.jl")
-include("camera.jl")
 include("acquisitions.jl")
-include("clients.jl")
-
-module SCImageViews
-ENV["REACTIVE_CHANNEL_SIZE"] = 4096
-using ..SpinnakerCameras
-using GtkReactive
-using Images, ImageView, Gtk.ShortNames
-include("gui.jl")
-export live_display
-end
+include("camera.jl")
 
 end # module
