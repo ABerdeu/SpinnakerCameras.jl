@@ -76,6 +76,7 @@ function next_frame(camera::Camera)
     end
 
     flag_success = false
+    global img
     while !flag_success
         img =
             try
@@ -90,27 +91,102 @@ function next_frame(camera::Camera)
 
        # check image completeness
        if img.incomplete == 1
-           print("Image is incomplete.. skipped \n")
+           print("Image is incomplete... skipped \n")
            finalize(img)
 
        elseif img.status != 0
-           print("Image has error.. skipped \n")
+           print("Image has error... skipped \n")
            finalize(img)
        else
            flag_success = true
        end
-
-       # return the frame
-       frame = convert_UInt2Float(img.data)
-       finalize(img)
-
-       # Stopping the camera if needed
-       if !flag_streaming
-           stop(camera)
-       end
-
-       return frame
     end
+
+    # return the frame
+    frame = convert_UInt2Float(img.data)
+    finalize(img)
+
+    # Stopping the camera if needed
+    if !flag_streaming
+        stop(camera)
+    end
+
+    return frame
+end
+
+
+"""
+    frame = last_frame(camera::Camera)
+    yiedls the last frame from camera `cam`.
+""" last_frame
+function last_frame(camera::Camera)
+
+    # Starting the camera if needed
+    flag_streaming = isstreaming(camera)
+    if !flag_streaming
+        start(camera)
+    end
+
+    global img1
+    global img2
+
+    # Ensuring that at least one frame is acquired
+    flag_success = false 
+    while !flag_success
+        img1 =
+            try
+                next_image(camera)
+            catch ex
+                if (!isa(ex, SpinnakerCameras.CallError) ||
+                ex.code != SpinnakerCameras.SPINNAKER_ERR_TIMEOUT)
+                rethrow(ex)
+            end
+            nothing
+            end
+        flag_success = (img1.incomplete != 1) & (img1.status == 0)
+        if !flag_success
+            finalize(img1)
+        end
+    end
+    print("Coucou 0 \n")
+
+    # Ensuring that this frame is the last
+    flag_last = false # Flag to ensure that the frame is the last
+    while !flag_last
+        img2 =
+            try
+                next_image(camera)
+            catch ex
+                if (!isa(ex, SpinnakerCameras.CallError) ||
+                   ex.code != SpinnakerCameras.SPINNAKER_ERR_TIMEOUT)
+                   rethrow(ex)
+               end
+               nothing
+           end
+
+        # check image completeness
+        if img2.incomplete == 1
+            finalize(img2)
+            flag_last = true
+        elseif img2.status != 0
+            finalize(img2)
+            flag_last = true
+        else
+            finalize(img1)
+            img1 = img2
+        end
+    end
+
+    # return the frame
+    frame = convert_UInt2Float(img1.data)
+    finalize(img1)
+
+    # Stopping the camera if needed
+    if !flag_streaming
+        stop(camera)
+    end
+
+    return frame
 end
 
 

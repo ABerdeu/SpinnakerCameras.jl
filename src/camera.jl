@@ -595,16 +595,16 @@ function set_offsetY(camera::Camera, offsety::Int64)
     step = 2
     offsety_new = Int64(step*round(offsety/step))
     if offsety_new != offsety
-        @warn "offsetx is rounded to $offsety_new"
+        @warn "offsety is rounded to $offsety_new"
     end
 
     # checking the extremal bounds
     if offsety_new > offsetyMax
          offsety_new = offsetyMax
-        @warn "offsetx is bounded to $offsety_new"
+        @warn "offsety is bounded to $offsety_new"
     elseif offsety_new < offsetyMin
         offsety_new = offsetyMin
-       @warn "offsetx is bounded to $offsety_new"
+       @warn "offsety is bounded to $offsety_new"
     end
     setValue(OffsetYNode, offsety_new)
 
